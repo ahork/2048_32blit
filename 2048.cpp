@@ -1,5 +1,17 @@
-
-//  https://github.com/cuadue/2048_game/blob/master/2048_game.c
+/* Clone of the 2048 sliding tile puzzle game. (C) Wes Waugh 2014
+ * based  https://github.com/cuadue/2048_game/blob/master/2048_game.c
+ *
+ * This program  works on 32blit Console @Pimoroni with curses. 
+ *
+ *
+ *
+ * This program is free software, licensed under the GPLv3. Check the
+ * LICENSE file for details.
+ */
+ 
+ // RAF : High Score
+ // RAF : Agrandir les cases
+ 
 
 #include <string>
 #include <string.h>
@@ -11,6 +23,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "2048.hpp"
 
@@ -21,9 +34,9 @@
 
 typedef int tile;
 int last_turn;
-
 int opt;
-int chgt;
+int loose = 0;
+
 uint16_t last_buttons = 0;
 
 	
@@ -33,8 +46,6 @@ struct game {
 };
 
 struct game games;
-
-
 
 static int delay_ms = 250;
 static int batch_mode;
@@ -80,6 +91,7 @@ int place_tile(struct game *game)
 
 void print_tile(int tile,int crow,int ccol)
 {
+	
 	point position(crow*20 + 2, ccol*20 + 2);
 	
 	if (tile) 
@@ -92,6 +104,13 @@ void print_tile(int tile,int crow,int ccol)
 		if (1 << tile == 64) fb.blit(ss_tile, rect(20, 0, 20, 20), position);
 		if (1 << tile == 128) fb.blit(ss_tile, rect(20, 20, 20, 20), position);
 		if (1 << tile == 256) fb.blit(ss_tile, rect(20, 40, 20, 20), position);
+		if (1 << tile == 512) fb.blit(ss_tile, rect(20, 60, 20, 20), position);
+		if (1 << tile == 1024) fb.blit(ss_tile, rect(20, 80, 20, 20), position);
+		if (1 << tile == 2048) fb.blit(ss_tile, rect(40, 0, 20, 20), position);
+		if (1 << tile == 4096) fb.blit(ss_tile, rect(40, 20, 20, 20), position);
+		if (1 << tile == 8192) fb.blit(ss_tile, rect(40, 40, 20, 20), position);
+		if (1 << tile == 16384) fb.blit(ss_tile, rect(40, 60, 20, 20), position);
+		if (1 << tile == 32768) fb.blit(ss_tile, rect(40, 80, 20, 20), position);
 		
 	}
 	else {
@@ -103,17 +122,20 @@ void print_tile(int tile,int crow,int ccol)
 void print_game(const struct game *game)
 {
 	int r, c;
-	//move(0, 0);
-	//printw("Score: %6d  Turns: %4d", game->score, game->turns);
-	printf("jeu");
+	char Scores[50];
+	fb.pen(rgba(0, 0, 0));
+	fb.clear();
+	fb.pen(rgba(255, 0, 0));
+	sprintf(Scores,"Score: %6d  Tours: %4d", game->score, game->turns);
+	fb.text(Scores , &minimal_font[0][0], point(5, 85));		
+	
+	
 	for (r = 0; r < NROWS; r++) {
 		for (c = 0; c < NCOLS; c++) {
-			//move(r + 2, 5 * c);  // raf gestion position tuile
-			
 			print_tile(game->board[r][c],r,c);
 		}
 	}
-	chgt = 0;
+	
 	
 }
 
@@ -233,82 +255,84 @@ void init_curses()
 }
 
 
-
-
-
-
 /* setup */
 void init() {
-	
-	
-	// load and set as the current spritesheet on our framebuffer
-	//last_turn = games.turns;
-	
+	//set_screen_mode(screen_mode::hires);
+	 fb.pen(rgba(0x4e, 0xb3, 0xf7));
+	srand(456);
+	games = {0};
+
 	last_turn = games.turns;
+
 	//init game
 	place_tile(&games);
 	place_tile(&games);	
 	print_game(&games);
-	chgt = 0;
-	games = {0};
+	
+	
 }
 
 
 void render(uint32_t time) {
-
-   
+  
 
     
 }
 
 void update(uint32_t time) {
 
-	 uint16_t changed = blit::buttons ^ last_buttons;
+	uint16_t changed = blit::buttons ^ last_buttons;
     uint16_t pressed = changed & blit::buttons;
     uint16_t released = changed & ~blit::buttons;
 
 
- fb.pen(rgba(255, 255, 255, 100));
-     fb.rectangle(rect(1, 120 - 10, 12, 9));  
-	 
-	 // define position
-
+ 
 	last_turn = games.turns;
 	
 
 	
-   if(released & blit::button::DPAD_LEFT) {  
-									chgt = 1;
+   if(released & blit::button::DPAD_LEFT) {  									
 									 move_up(&games); 
 									 place_tile(&games);
 									 print_game(&games);
-									 if (lose_game(games)) {printf("loos");}
+									 if (lose_game(games)) {loose =1;}
 }
  
- if (released & blit::button::DPAD_RIGHT)  {
-									chgt = 1;
+ if (released & blit::button::DPAD_RIGHT)  {									
 									move_down(&games); 
 									 place_tile(&games);	
 									 print_game(&games);
-									 if (lose_game(games)) {printf("loos");}
+									 if (lose_game(games)) {loose =1;}
 									 }
-  if (released & blit::button::DPAD_UP )    { 
-									chgt = 1;
+  if (released & blit::button::DPAD_UP )    { 									
 									move_left(&games);  
 									place_tile(&games);
 									 print_game(&games);
-									 if (lose_game(games)) {printf("loos");}
+									 if (lose_game(games)) {loose =1;}
 									}
   if (released & blit::button::DPAD_DOWN)  { 
-									chgt = 1;
-									move_right(&games);
+									 move_right(&games);
 									 place_tile(&games);	
 									 print_game(&games);
-									 if (lose_game(games)) {printf("loos");}
+									 if (lose_game(games)) {loose =1;}
 									}
+	
+  if (released & blit::button::HOME)  {
+									srand(games.score);
+									games = {0};
+
+									last_turn = games.turns;
+									//init game
+									place_tile(&games);
+									place_tile(&games);	
+									print_game(&games);
+								  }
+  
 	last_buttons = blit::buttons;
  
+	if (loose == 1 ) fb.text("Perdu (Reset : Home)" , &minimal_font[0][0], point(5, 95));		
+
 	
-		
-	 
+	fb.watermark();
+	
 }
