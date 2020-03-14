@@ -14,16 +14,13 @@
  
 
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <memory>
 #include <cstdlib>
-#include <array>
+
+
 #include <assert.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 
 #include "2048.hpp"
 
@@ -32,12 +29,15 @@
 #define NROWS 4
 #define NCOLS NROWS
 
+
+
 typedef int tile;
 int last_turn;
 int opt;
 int loose = 0;
 
 uint16_t last_buttons = 0;
+
 
 	
 struct game {
@@ -50,13 +50,14 @@ struct game games;
 static int delay_ms = 250;
 static int batch_mode;
 
-
-using namespace blit;
-
 const uint16_t screen_width = 320;
 const uint16_t screen_height = 240;
 
-spritesheet *ss_tile = spritesheet::load(packed_data);
+using namespace blit;
+
+
+//SpriteSheet *ss_tile = SpriteSheet::load(packed_data);
+SpriteSheet *ss_tile = SpriteSheet::load(packed_data);
 
 
 // place_tile() returns 0 if it did place a tile and -1 if there is no open
@@ -92,42 +93,44 @@ int place_tile(struct game *game)
 void print_tile(int tile,int crow,int ccol)
 {
 	
-	point position(crow*20 + 2, ccol*20 + 2);
+	Point position(crow*20 + 2, ccol*20 + 2);
+	
 	
 	if (tile) 
 	{
-		if (1 << tile == 2) fb.blit(ss_tile, rect(0, 0, 20, 20), position);
-		if (1 << tile == 4) fb.blit(ss_tile, rect(0, 20, 20, 20), position);
-		if (1 << tile == 8) fb.blit(ss_tile, rect(0, 40, 20, 20), position);
-		if (1 << tile == 16) fb.blit(ss_tile, rect(0, 60, 20, 20), position);
-		if (1 << tile == 32) fb.blit(ss_tile, rect(0, 80, 20, 20), position);
-		if (1 << tile == 64) fb.blit(ss_tile, rect(20, 0, 20, 20), position);
-		if (1 << tile == 128) fb.blit(ss_tile, rect(20, 20, 20, 20), position);
-		if (1 << tile == 256) fb.blit(ss_tile, rect(20, 40, 20, 20), position);
-		if (1 << tile == 512) fb.blit(ss_tile, rect(20, 60, 20, 20), position);
-		if (1 << tile == 1024) fb.blit(ss_tile, rect(20, 80, 20, 20), position);
-		if (1 << tile == 2048) fb.blit(ss_tile, rect(40, 0, 20, 20), position);
-		if (1 << tile == 4096) fb.blit(ss_tile, rect(40, 20, 20, 20), position);
-		if (1 << tile == 8192) fb.blit(ss_tile, rect(40, 40, 20, 20), position);
-		if (1 << tile == 16384) fb.blit(ss_tile, rect(40, 60, 20, 20), position);
-		if (1 << tile == 32768) fb.blit(ss_tile, rect(40, 80, 20, 20), position);
+		if (1 << tile == 2) screen.blit(ss_tile, Rect(0, 0, 20, 20), position);
+		if (1 << tile == 4) screen.blit(ss_tile, Rect(0, 20, 20, 20), position);
+		if (1 << tile == 8) screen.blit(ss_tile, Rect(0, 40, 20, 20), position);
+		if (1 << tile == 16) screen.blit(ss_tile, Rect(0, 60, 20, 20), position);
+		if (1 << tile == 32) screen.blit(ss_tile, Rect(0, 80, 20, 20), position);
+		if (1 << tile == 64) screen.blit(ss_tile, Rect(20, 0, 20, 20), position);
+		if (1 << tile == 128) screen.blit(ss_tile, Rect(20, 20, 20, 20), position);
+		if (1 << tile == 256) screen.blit(ss_tile, Rect(20, 40, 20, 20), position);
+		if (1 << tile == 512) screen.blit(ss_tile, Rect(20, 60, 20, 20), position);
+		if (1 << tile == 1024) screen.blit(ss_tile, Rect(20, 80, 20, 20), position);
+		if (1 << tile == 2048) screen.blit(ss_tile, Rect(40, 0, 20, 20), position);
+		if (1 << tile == 4096) screen.blit(ss_tile, Rect(40, 20, 20, 20), position);
+		if (1 << tile == 8192) screen.blit(ss_tile, Rect(40, 40, 20, 20), position);
+		if (1 << tile == 16384) screen.blit(ss_tile, Rect(40, 60, 20, 20), position);
+		if (1 << tile == 32768) screen.blit(ss_tile, Rect(40, 80, 20, 20), position);
 		
 	}
 	else {
-		  fb.blit(ss_tile, rect(0, 100, 20, 20), position);
+		  screen.blit(ss_tile, Rect(0, 100, 20, 20), position);
 	}
-		 
+		
 }
 
 void print_game(const struct game *game)
 {
 	int r, c;
 	char Scores[50];
-	fb.pen(rgba(0, 0, 0));
-	fb.clear();
-	fb.pen(rgba(255, 0, 0));
+	screen.pen = Pen(0, 0, 0);	
+	screen.clear();
+	screen.pen = Pen(255, 0, 0);
 	sprintf(Scores,"Score: %6d  Tours: %4d", game->score, game->turns);
-	fb.text(Scores , &minimal_font[0][0], point(5, 85));		
+	screen.text(Scores , minimal_font, Point(5, 85));		
+	
 	
 	
 	for (r = 0; r < NROWS; r++) {
@@ -257,10 +260,18 @@ void init_curses()
 
 /* setup */
 void init() {
-	//set_screen_mode(screen_mode::hires);
-	 fb.pen(rgba(0x4e, 0xb3, 0xf7));
+	//set_screen_mode(ScreenMode::hires);
+	
+	screen.alpha = 255;
+	screen.mask = nullptr;
+	screen.pen = Pen(0, 0, 0, 0);
+	screen.clear();
+
+	//screen.pen = Pen(0x4e, 0xb3, 0xf7);
 	srand(456);
 	games = {0};
+
+	
 
 	last_turn = games.turns;
 
@@ -268,7 +279,6 @@ void init() {
 	place_tile(&games);
 	place_tile(&games);	
 	print_game(&games);
-	
 	
 }
 
@@ -278,6 +288,7 @@ void render(uint32_t time) {
 
     
 }
+
 
 void update(uint32_t time) {
 
@@ -290,34 +301,33 @@ void update(uint32_t time) {
 	last_turn = games.turns;
 	
 
-	
-   if(released & blit::button::DPAD_LEFT) {  									
+	if(pressed & Button::DPAD_LEFT) {  									
 									 move_up(&games); 
 									 place_tile(&games);
 									 print_game(&games);
 									 if (lose_game(games)) {loose =1;}
 }
  
- if (released & blit::button::DPAD_RIGHT)  {									
+	if (pressed & Button::DPAD_RIGHT)  {									
 									move_down(&games); 
 									 place_tile(&games);	
 									 print_game(&games);
 									 if (lose_game(games)) {loose =1;}
 									 }
-  if (released & blit::button::DPAD_UP )    { 									
+  if (pressed & Button::DPAD_UP)    { 									
 									move_left(&games);  
 									place_tile(&games);
 									 print_game(&games);
 									 if (lose_game(games)) {loose =1;}
 									}
-  if (released & blit::button::DPAD_DOWN)  { 
+  if (pressed & Button::DPAD_DOWN)  { 
 									 move_right(&games);
 									 place_tile(&games);	
 									 print_game(&games);
 									 if (lose_game(games)) {loose =1;}
 									}
 	
-  if (released & blit::button::HOME)  {
+  if (pressed & Button::HOME)  {
 									srand(games.score);
 									games = {0};
 
@@ -330,9 +340,9 @@ void update(uint32_t time) {
   
 	last_buttons = blit::buttons;
  
-	if (loose == 1 ) fb.text("Perdu (Reset : Home)" , &minimal_font[0][0], point(5, 95));		
+	if (loose == 1 ) screen.text("Perdu (Reset : Home)" , minimal_font, Point(5, 95));		
 
 	
-	fb.watermark();
+	screen.watermark();
 	
 }
