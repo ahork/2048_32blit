@@ -18,11 +18,12 @@
 #include <memory>
 #include <cstdlib>
 
+#include "2048.hpp"
+#include "assets.hpp"
 
 #include <assert.h>
 
 
-#include "2048.hpp"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -30,6 +31,7 @@
 #define NCOLS NROWS
 
 
+using namespace blit;
 
 typedef int tile;
 int last_turn;
@@ -53,12 +55,11 @@ static int batch_mode;
 const uint16_t screen_width = 320;
 const uint16_t screen_height = 240;
 
-using namespace blit;
+
 
 
 //SpriteSheet *ss_tile = SpriteSheet::load(packed_data);
 SpriteSheet *ss_tile = SpriteSheet::load(packed_data);
-
 
 // place_tile() returns 0 if it did place a tile and -1 if there is no open
 // space.
@@ -261,7 +262,7 @@ void init_curses()
 /* setup */
 void init() {
 	//set_screen_mode(ScreenMode::hires);
-	
+		
 	screen.alpha = 255;
 	screen.mask = nullptr;
 	screen.pen = Pen(0, 0, 0, 0);
@@ -272,7 +273,6 @@ void init() {
 	games = {0};
 
 	
-
 	last_turn = games.turns;
 
 	//init game
@@ -285,14 +285,7 @@ void init() {
 
 void render(uint32_t time) {
   
-
-    
-}
-
-
-void update(uint32_t time) {
-
-	uint16_t changed = blit::buttons ^ last_buttons;
+uint16_t changed = blit::buttons ^ last_buttons;
     uint16_t pressed = changed & blit::buttons;
     uint16_t released = changed & ~blit::buttons;
 
@@ -344,5 +337,12 @@ void update(uint32_t time) {
 
 	
 	screen.watermark();
-	
+
+    
+}
+
+
+void update(uint32_t time) {
+
+		
 }
